@@ -4,66 +4,81 @@ let isValid = require("./auth_users.js").isValid;
 let users = require("./auth_users.js").users;
 const public_users = express.Router();
 
-public_users.post("/register", (req, res) => {
+public_users.post("/register", (req,res) => {
   const { username, password } = req.body || {};
-
-  if (!username || !password) {
-    return res.status(400).json({ message: "Username and password are required" });
-  }
-
-  const alreadyExists = users.find(u => u.username === username);
-  if ((typeof isValid === "function" && !isValid(username)) || alreadyExists) {
+  if (!username || !password) return res.status(400).json({ message: "Username and password are required" });
+  const taken = users.find(u => u.username === username);
+  if ((typeof isValid === "function" && !isValid(username)) || taken) {
     return res.status(409).json({ message: "Username already exists" });
   }
-
   users.push({ username, password });
   return res.status(201).json({ message: "User successfully registered. Now you can login" });
 });
 
-public_users.get('/', function (req, res) {
-  return res
-    .status(200)
-    .send(JSON.stringify(books, null, 2));
-});
+const later = (ms = 60) => new Promise(res => setTimeout(res, ms));
 
-public_users.get('/isbn/:isbn', function (req, res) {
-  const { isbn } = req.params;
-  const book = books[isbn];
+const getAllBooksAsync = async () => {
+  await later();
+  return books;
+};
 
-  if (!book) {
-    return res.status(404).json({ message: `No book found with ISBN ${isbn}` });
+public_users.get('/', async (req, res) => {
+  try {
+    const data = await getAllBooksAsync();
+    return res.status(200).send(JSON.stringify(data, null, 2)); // pretty as hinted
+  } catch (err) {
+    return res.status(500).json({ message: err.message || "Error fetching books" });
   }
-  return res.status(200).json(book);
 });
 
-public_users.get('/author/:author', function (req, res) {
-  const authorParam = (req.params.author || "").toLowerCase();
-
-  const result = Object.keys(books)
-    .map(isbn => ({ isbn, ...books[isbn] }))
-    .filter(b => (b.author || "").toLowerCase() === authorParam);
-
-  return res.status(200).json(result);
-});
-
-public_users.get('/title/:title', function (req, res) {
-  const titleParam = (req.params.title || "").toLowerCase();
-
-  const result = Object.keys(books)
-    .map(isbn => ({ isbn, ...books[isbn] }))
-    .filter(b => (b.title || "").toLowerCase() === titleParam);
-
-  return res.status(200).json(result);
-});
-
-public_users.get('/review/:isbn', function (req, res) {
-  const { isbn } = req.params;
+const getBookByIsbnAsync = async (isbn) => {
+  await later();
   const book = books[isbn];
+  if (!book) throw new Error(`No book found with ISBN ${isbn}`);
+  return book;
+};
 
-  if (!book) {
-    return res.status(404).json({ message: `No book found with ISBN ${isbn}` });
+public_users.get('/isbn/:isbn', async (req, res) => {
+  try {
+    const book = await getBookByIsbnAsync(req.params.isbn);
+    return res.status(200).json(book);
+  } catch (err) {
+    return res.status(404).json({ message: err.message || "Not found" });
   }
-  return res.status(200).json(book.reviews || {});
+});
+
+const getBooksByAuthorAsync = async (author) => {
+  await later();
+  const a = (author || "").toLowerCase();
+  return Object.keys(books)
+    .map(isbn => ({ isbn, ...books[isbn] }))
+    .filter(b => (b.author || "").toLowerCase() === a);
+};
+
+public_users.get('/author/:author', async (req, res) => {
+  try {
+    const result = await getBooksByAuthorAsync(req.params.author);
+    return res.status(200).json(result);
+  } catch (err) {
+    return res.status(500).json({ message: err.message || "Error" });
+  }
+});
+
+const getBooksByTitleAsync = async (title) => {
+  await later();
+  const t = (title || "").toLowerCase();
+  return Object.keys(books)
+    .map(isbn => ({ isbn, ...books[isbn] }))
+    .filter(b => (b.title || "").toLowerCase() === t);
+};
+
+public_users.get('/title/:title', async (req, res) => {
+  try {
+    const result = await getBooksByTitleAsync(req.params.title);
+    return res.status(200).json(result);
+  } catch (err) {
+    return res.status(500).json({ message: err.message || "Error" });
+  }
 });
 
 module.exports.general = public_users;
