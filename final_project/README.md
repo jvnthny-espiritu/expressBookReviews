@@ -413,16 +413,38 @@ NODE_ENV=production
 ```
 
 #### 3. Additional Production Requirements
-- ✅ Use HTTPS/TLS for all communication
+
+**Known Security Alerts** (identified by CodeQL):
+1. **Rate Limiting**: Authentication routes need rate limiting to prevent brute force attacks
+2. **SSL/HTTPS**: Cookies should be served only over HTTPS in production
+3. **CSRF Protection**: Implement CSRF tokens for state-changing operations
+
+**Production Checklist**:
+- ✅ Use HTTPS/TLS for all communication (SSL-only cookies)
 - ✅ Implement rate limiting (use `express-rate-limit`)
+- ✅ Add CSRF protection (use `csurf` middleware)
 - ✅ Add request logging (use `morgan`)
 - ✅ Use a proper database (MongoDB, PostgreSQL, etc.)
-- ✅ Implement CORS policies appropriately
+- ✅ Implement CORS policies appropriately (use `cors` middleware)
 - ✅ Add helmet.js for security headers
 - ✅ Regular security audits with `npm audit`
 - ✅ Pin all dependency versions
 - ✅ Implement API versioning
 - ✅ Add input sanitization against XSS and SQL injection
+- ✅ Set `secure: true` and `httpOnly: true` for cookies
+- ✅ Configure session with secure settings:
+  ```javascript
+  app.use(session({
+    secret: SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: true, // Requires HTTPS
+      httpOnly: true,
+      maxAge: 3600000 // 1 hour
+    }
+  }));
+  ```
 
 ## Contributing
 
