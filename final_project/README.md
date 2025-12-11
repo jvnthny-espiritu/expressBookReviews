@@ -379,17 +379,50 @@ tests/
 
 ## Security Considerations
 
-- **JWT Tokens**: Secure token-based authentication
-- **Session Management**: Server-side session storage
-- **Input Validation**: All user inputs are validated
+### Current Implementation
+- **JWT Tokens**: Secure token-based authentication with configurable expiry
+- **Session Management**: Server-side session storage with secure secrets
+- **Input Validation**: All user inputs are validated and sanitized
 - **Error Messages**: Generic error messages to prevent information leakage
+- **Dependency Security**: All dependencies updated to address known vulnerabilities
 
-**Note**: In a production environment:
-- Use environment variables for sensitive data
-- Hash passwords using bcrypt
-- Use HTTPS
-- Implement rate limiting
-- Use a proper database instead of in-memory storage
+### ⚠️ Important Security Notes for Production
+
+This is a **demonstration/portfolio project**. Before deploying to production, implement these critical security measures:
+
+#### 1. Password Security
+```javascript
+// Install bcrypt
+npm install bcrypt
+
+// Hash passwords on registration
+const bcrypt = require('bcrypt');
+const hashedPassword = await bcrypt.hash(password, 10);
+
+// Verify passwords on login
+const isValid = await bcrypt.compare(password, user.hashedPassword);
+```
+
+#### 2. Environment Variables
+Create a `.env` file (never commit to git):
+```env
+PORT=5000
+JWT_SECRET=<strong-random-secret-at-least-32-chars>
+SESSION_SECRET=<strong-random-secret-at-least-32-chars>
+NODE_ENV=production
+```
+
+#### 3. Additional Production Requirements
+- ✅ Use HTTPS/TLS for all communication
+- ✅ Implement rate limiting (use `express-rate-limit`)
+- ✅ Add request logging (use `morgan`)
+- ✅ Use a proper database (MongoDB, PostgreSQL, etc.)
+- ✅ Implement CORS policies appropriately
+- ✅ Add helmet.js for security headers
+- ✅ Regular security audits with `npm audit`
+- ✅ Pin all dependency versions
+- ✅ Implement API versioning
+- ✅ Add input sanitization against XSS and SQL injection
 
 ## Contributing
 

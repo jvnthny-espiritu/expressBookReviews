@@ -40,7 +40,11 @@ const registerUser = (username, password) => {
     return false;
   }
   
-  // In production, password should be hashed before storing
+  // NOTE: Passwords are stored in plain text for demonstration purposes
+  // In a production environment, you MUST hash passwords before storing:
+  // 1. Install bcrypt: npm install bcrypt
+  // 2. Hash password: const hashedPassword = await bcrypt.hash(password, 10);
+  // 3. Verify password: await bcrypt.compare(password, user.password);
   users.push({ username, password });
   return true;
 };

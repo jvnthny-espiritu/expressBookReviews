@@ -10,8 +10,15 @@ const {
   getBooksByTitle,
 } = require('../models/booksModel');
 
-// Helper function to simulate async operations
-const delay = (ms = 60) => new Promise(resolve => setTimeout(resolve, ms));
+// Helper function to simulate async operations (for demonstration purposes)
+// In production, this would represent actual database queries
+const delay = (ms = 60) => {
+  // Only add delay in development for demonstration
+  if (process.env.NODE_ENV === 'production') {
+    return Promise.resolve();
+  }
+  return new Promise(resolve => setTimeout(resolve, ms));
+};
 
 /**
  * Get all books (async)
